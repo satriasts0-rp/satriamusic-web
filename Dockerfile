@@ -22,13 +22,14 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Mengaktifkan mod_rewrite dan mengubah konfigurasi AllowOverride
+# Mengaktifkan mod_rewrite dan mengubah konfigurasi port ke 7860
 RUN a2enmod rewrite \
+    && sed -i 's/80/7860/g' /etc/apache2/ports.conf /etc/apache2/sites-available/*.conf \
     && sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf \
     && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Membuat VirtualHost default baru yang mengarah ke public
-RUN echo '<VirtualHost *:80>\n\
+# Membuat VirtualHost untuk port 7860
+RUN echo '<VirtualHost *:7860>\n\
     DocumentRoot /var/www/html/public\n\
     <Directory /var/www/html/public>\n\
         AllowOverride All\n\
@@ -36,5 +37,6 @@ RUN echo '<VirtualHost *:80>\n\
     </Directory>\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
+EXPOSE 7860
 EXPOSE 80
 CMD ["apache2-foreground"]
